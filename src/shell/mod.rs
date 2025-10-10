@@ -1,9 +1,11 @@
 use core::str::SplitWhitespace;
 use core::fmt::Write;
-
-use crate::tty::{Tty, TtyStateFlag};
+use core::sync::atomic::{AtomicBool, Ordering};
+use crate::tty::{Tty, TtyEvent};
 use crate::log::console::CONSOLE_OBJECT_NAME;
 use crate::{print, println, object_with, object_with_mut};
+
+use crate::channel::SubscriberId;
 
 pub struct Command {
     pub name: &'static str,
@@ -25,30 +27,44 @@ macro_rules! command {
     };
 }
 
-pub struct Shell<'a> {
+pub struct Shell {
     input: heapless::String<32>,
-    input_changed: bool,
-    commands: &'a [Command]
+    commands: &'static [Command],
+    input_changed: AtomicBool,
+    tty_event_subscriber_id: SubscriberId,
 }
 
 // TODO: Make async?
-impl<'a> Shell<'a> {
-    pub fn new(commands: &'a [Command]) -> Self {
+impl Shell {
+    pub fn new(commands: &'static [Command]) -> Self {
         Self {
+            commands,
             input: heapless::String::new(),
-            input_changed: true,
-            commands
+            input_changed: AtomicBool::new(false),
+            tty_event_subscriber_id: object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.subscribe().unwrap()),
         }
     }
+    
+    // pub fn bind_tty(self: Pin<&Self>) {
+    //     object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty,
+    //         tty.subscribe(
+    //             Subscriber::new(|ctx, event| {
+    //                 if event == TtyEvent::WriteHappened {
+    //                     // TODO: write self.write_happened
+    //                 }
+    //             }, ())
+    //         )
+    //     );
+    // }
 
     pub fn cycle(&mut self) {
         self.prompt();
 
-        let byte = object_with!(CONSOLE_OBJECT_NAME, Tty, console, {
-            console.read_byte()
-        });
+        // let byte = object_with!(CONSOLE_OBJECT_NAME, Tty, console, {
+        //     console.read_byte()
+        // });
 
-        if let Some(b) = byte {
+        if let Some(b) = object_with!(CONSOLE_OBJECT_NAME, Tty, tty, tty.read()) {
             match b {
                 crate::ASCII_KEY_CR | crate::ASCII_KEY_LF => { // ASCII Enter
                     println!();
@@ -62,23 +78,28 @@ impl<'a> Shell<'a> {
                 }
             }
 
-            self.input_changed = true;
+            self.input_changed.store(true, Ordering::SeqCst);
         }
     }
 
     fn prompt(&mut self) {
-        let write_happened = object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
-            console.get_state_flag(TtyStateFlag::WriteHappened)
+        // let write_happened = object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
+        //     console.get_state_flag(TtyStateFlag::WriteHappened)
+        // });
+        
+        let tty_event = object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
+            console.recv_event(self.tty_event_subscriber_id)
         });
 
-        if self.input_changed || write_happened {
+        if self.input_changed.load(Ordering::Acquire) || matches!(tty_event, Some(TtyEvent::WriteHappened)) {
             print!("{}\r# {}", crate::ANSI_ERASE_FROM_CURSOR_TO_LINE_START, self.input);
 
-            object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
-                console.set_state_flag(TtyStateFlag::WriteHappened, false)
-            });
+            // object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
+            //     console.set_state_flag(TtyStateFlag::WriteHappened, false)
+            // });
 
-            self.input_changed = false;
+            // self.input_changed = false;
+            self.input_changed.store(false, Ordering::SeqCst);
         }
     }
 
@@ -108,5 +129,11 @@ impl<'a> Shell<'a> {
         }
 
         self.input.clear();
+    }
+}
+
+impl Drop for Shell {
+    fn drop(&mut self) {
+        object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.unsubscribe(self.tty_event_subscriber_id));
     }
 }

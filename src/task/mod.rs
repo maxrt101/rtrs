@@ -32,18 +32,21 @@ impl<'a, R> Task<'a, R> {
         }
     }
 
-    #[inline]
+    // #[inline]
     pub fn pend(&self) {
+        let _ = self.tcb.lock();
         self.tcb.pend();
     }
 
-    #[inline]
+    // #[inline]
     pub fn ready(&self) {
+        let _ = self.tcb.lock();
         self.tcb.ready()
     }
 
-    #[inline]
+    // #[inline]
     pub fn done(&self) {
+        let _ = self.tcb.lock();
         self.tcb.done()
     }
 
@@ -62,6 +65,8 @@ impl<'a, R> Task<'a, R> {
     }
 
     pub fn poll(&mut self) -> Poll<R> {
+        let _ = self.tcb.lock();
+
         if self.is_state(TaskState::Ready) {
             self.pend();
 
@@ -98,3 +103,6 @@ impl<'a, R> Task<'a, R> {
         }
     }
 }
+
+unsafe impl<'a, R> Send for Task<'a, R> {}
+unsafe impl<'a, R> Sync for Task<'a, R> {}

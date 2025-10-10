@@ -142,16 +142,6 @@ impl<T> Mutex<T> {
             }
         } else {
             if self.lock.load(Ordering::Relaxed) {
-                // #[cfg(feature = "track_locks")]
-                // if let Some(location) = self.last_lock_location.get() {
-                //     panic!("Mutex is already held at {}:{}", location.file(), location.line());
-                // } else {
-                //     panic!("Mutex is already held");
-                // }
-                //
-                // #[cfg(not(feature = "track_locks"))]
-                // panic!("Mutex is already held");
-
                 #[cfg(feature = "track_locks")]
                 mutex_acquire_report_held(self.last_lock_location.get());
 

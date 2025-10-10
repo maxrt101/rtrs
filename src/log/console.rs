@@ -21,7 +21,9 @@ impl Empty for ConsoleWriter {
 impl core::fmt::Write for ConsoleWriter {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
-            console.write(s);
+            for c in s.chars() {
+                console.write(c as u8);
+            }
         });
 
         Ok(())

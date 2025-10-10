@@ -1,4 +1,4 @@
-use core::sync::atomic::{AtomicU8, Ordering};
+use core::sync::atomic::{AtomicU8, AtomicBool, Ordering};
 
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum TaskState {
@@ -39,15 +39,58 @@ impl core::fmt::Display for TaskState {
     }
 }
 
+pub struct TaskControlBlockGuard<'a> {
+    tcb: &'a TaskControlBlock,
+}
+
+impl<'a> Drop for TaskControlBlockGuard<'a> {
+    fn drop(&mut self) {
+        unsafe { self.tcb.release(); }
+    }
+}
+
 pub struct TaskControlBlock {
     pub state: AtomicU8,
+    pub lock: AtomicBool,
 }
 
 impl TaskControlBlock {
     pub fn new() -> Self {
         Self {
             state: AtomicU8::new(TaskState::Ready.into()),
+            lock: AtomicBool::new(false),
         }
+    }
+
+    pub fn locked(&self) -> bool {
+        self.lock.load(Ordering::SeqCst)
+    }
+
+    pub fn lock(&self) -> TaskControlBlockGuard<'_> {
+        unsafe { self.acquire(); }
+        TaskControlBlockGuard { tcb: self }
+    }
+
+    pub fn try_lock(&self) -> Result<TaskControlBlockGuard<'_>, ()> {
+        if self.locked() {
+            return Err(());
+        }
+
+        unsafe { self.acquire(); }
+
+        Ok(TaskControlBlockGuard { tcb: self })
+    }
+
+    pub unsafe fn acquire(&self) {
+        if self.locked() {
+            panic!("TaskControlBlock already locked");
+        }
+
+        self.lock.store(true, Ordering::SeqCst);
+    }
+
+    pub unsafe fn release(&self) {
+        self.lock.store(false, Ordering::SeqCst);
     }
 
     pub fn pend(&self) {

@@ -26,6 +26,10 @@ impl Storage {
         }
     }
 
+    pub fn has_object(&self, name: &'static str) -> bool {
+        self.storage.contains_key(name)
+    }
+
     pub fn get_raw(&'_ self, key: &str) -> Option<Ref<'_, BoxObject>> {
         match self.storage.get(key) {
             Some(lock) => Some(lock.lock()),
@@ -114,4 +118,12 @@ macro_rules! object_insert {
         let mut storage = $crate::object::STORAGE.lock_mut();
         storage.insert($name, $value);
     }};
+}
+
+#[macro_export]
+macro_rules! object_remove {
+    ($name:expr) => {{
+        let mut storage = $crate::object::STORAGE.lock_mut();
+        storage.remove($name);
+    }}
 }
