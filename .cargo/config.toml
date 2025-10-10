@@ -1,8 +1,3 @@
-# Example target
-
-#[build]
-#target = "thumbv6m-none-eabi"
-
 # Example profiles for projects
 
 [profile.dev]
