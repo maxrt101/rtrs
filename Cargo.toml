@@ -1,0 +1,15 @@
+[package]
+name = "rtrs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+embedded-hal = "0.2.7"
+heapless = "0.8.0"
+void = { version = "1.0.2", default-features = false }
+
+[features]
+default = []
+lock_custom = []
+track_locks = []
+track_borrows = []

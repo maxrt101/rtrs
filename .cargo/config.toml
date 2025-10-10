@@ -1,0 +1,28 @@
+# Example target
+
+#[build]
+#target = "thumbv6m-none-eabi"
+
+# Example profiles for projects
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+opt-level = "z"
+debug-assertions = false
+overflow-checks = false
+debug = true
+
+[profile.release-lto]
+inherits = "release"
+lto = true
+
+[profile.dev.package."*"]
+inherits = "dev"
+
+[profile.release.package."*"]
+inherits = "release"
+
+[profile.release-lto.package."*"]
+inherits = "release-lto"
