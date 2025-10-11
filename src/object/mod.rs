@@ -1,0 +1,20 @@
+mod map;
+mod storage;
+mod macros;
+
+extern crate alloc;
+
+use alloc::boxed::Box;
+use core::any::Any;
+
+pub use storage::Storage;
+use crate::sync::RwLock;
+
+pub trait Object: Any {}
+
+pub type DynObject = dyn Object + Send + Sync;
+
+pub type BoxObject = Box<DynObject>;
+
+pub static STORAGE: RwLock<Storage> = RwLock::new(Storage::new());
+
