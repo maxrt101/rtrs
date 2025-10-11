@@ -45,39 +45,39 @@ impl<'a, T, L> Deref for MutexGuard<'a, T, L> {
 }
 
 
-pub struct MutexLockGuardMut<'a, T, L> {
+pub struct MutexGuardMut<'a, T, L> {
     data: &'a mut T,
     lock: &'a Mutex<L>,
 }
 
-impl<'a, T, L> MutexLockGuardMut<'a, T, L> {
+impl<'a, T, L> MutexGuardMut<'a, T, L> {
     pub fn map<U>(&mut self, f: fn(&T) -> &U) -> &U {
         f(self.data)
     }
 
-    pub fn map_into<U>(self, f: impl FnOnce(&mut T) -> &mut U) -> MutexLockGuardMut<'a, U, L> {
+    pub fn map_into<U>(self, f: impl FnOnce(&mut T) -> &mut U) -> MutexGuardMut<'a, U, L> {
         let mut this = ManuallyDrop::new(self);
 
-        MutexLockGuardMut {
+        MutexGuardMut {
             data: unsafe { &mut *(f(this.data.deref_mut()) as * mut U) },
             lock: this.lock,
         }
     }
 }
 
-impl<'a, L> MutexLockGuardMut<'a, L, L> {
+impl<'a, L> MutexGuardMut<'a, L, L> {
     fn from_mutex(lock: &'a Mutex<L>) -> Self {
         Self { data: unsafe { lock.get() }, lock }
     }
 }
 
-impl<'a, T, L> Drop for MutexLockGuardMut<'a, T, L> {
+impl<'a, T, L> Drop for MutexGuardMut<'a, T, L> {
     fn drop(&mut self) {
         unsafe { self.lock.release() }
     }
 }
 
-impl<'a, T, L> Deref for MutexLockGuardMut<'a, T, L> {
+impl<'a, T, L> Deref for MutexGuardMut<'a, T, L> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -85,7 +85,7 @@ impl<'a, T, L> Deref for MutexLockGuardMut<'a, T, L> {
     }
 }
 
-impl<'a, T, L> DerefMut for MutexLockGuardMut<'a, T, L> {
+impl<'a, T, L> DerefMut for MutexGuardMut<'a, T, L> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.data
     }
@@ -187,13 +187,13 @@ impl<T> Mutex<T> {
     }
 
     #[cfg_attr(feature = "track_locks", track_caller)]
-    pub fn lock_mut(&self) -> MutexLockGuardMut<'_, T, T> {
+    pub fn lock_mut(&self) -> MutexGuardMut<'_, T, T> {
         unsafe { self.acquire(); }
 
         #[cfg(feature = "track_locks")]
         self.last_lock_location.set(Some(core::panic::Location::caller()));
 
-        MutexLockGuardMut::from_mutex(self)
+        MutexGuardMut::from_mutex(self)
     }
 
     #[cfg_attr(feature = "track_locks", track_caller)]
@@ -203,6 +203,18 @@ impl<T> Mutex<T> {
             self.last_lock_location.set(Some(core::panic::Location::caller()));
 
             Some(MutexGuard::from_mutex(self))
+        } else {
+            None
+        }
+    }
+
+    #[cfg_attr(feature = "track_locks", track_caller)]
+    pub fn try_lock_mut(&self) -> Option<MutexGuardMut<'_, T, T>> {
+        if self.try_acquire() {
+            #[cfg(feature = "track_locks")]
+            self.last_lock_location.set(Some(core::panic::Location::caller()));
+
+            Some(MutexGuardMut::from_mutex(self))
         } else {
             None
         }
