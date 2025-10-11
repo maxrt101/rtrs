@@ -11,7 +11,7 @@ pub mod shell;
 pub mod util;
 pub mod log;
 pub mod pubsub;
-mod channel;
+pub mod channel;
 
 pub use tty::ansi::*;
 pub use tty::ascii::*;
