@@ -40,29 +40,13 @@ impl Shell {
         Self {
             commands,
             input: heapless::String::new(),
-            input_changed: AtomicBool::new(false),
+            input_changed: AtomicBool::new(true),
             tty_event_subscriber_id: object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.subscribe().unwrap()),
         }
     }
-    
-    // pub fn bind_tty(self: Pin<&Self>) {
-    //     object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty,
-    //         tty.subscribe(
-    //             Subscriber::new(|ctx, event| {
-    //                 if event == TtyEvent::WriteHappened {
-    //                     // TODO: write self.write_happened
-    //                 }
-    //             }, ())
-    //         )
-    //     );
-    // }
-
+   
     pub fn cycle(&mut self) {
         self.prompt();
-
-        // let byte = object_with!(CONSOLE_OBJECT_NAME, Tty, console, {
-        //     console.read_byte()
-        // });
 
         if let Some(b) = object_with!(CONSOLE_OBJECT_NAME, Tty, tty, tty.read()) {
             match b {
@@ -83,10 +67,6 @@ impl Shell {
     }
 
     fn prompt(&mut self) {
-        // let write_happened = object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
-        //     console.get_state_flag(TtyStateFlag::WriteHappened)
-        // });
-        
         let tty_event = object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
             console.recv_event(self.tty_event_subscriber_id)
         });
@@ -94,11 +74,6 @@ impl Shell {
         if self.input_changed.load(Ordering::Acquire) || matches!(tty_event, Some(TtyEvent::WriteHappened)) {
             print!("{}\r# {}", crate::ANSI_ERASE_FROM_CURSOR_TO_LINE_START, self.input);
 
-            // object_with_mut!(CONSOLE_OBJECT_NAME, Tty, console, {
-            //     console.set_state_flag(TtyStateFlag::WriteHappened, false)
-            // });
-
-            // self.input_changed = false;
             self.input_changed.store(false, Ordering::SeqCst);
         }
     }
