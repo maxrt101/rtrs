@@ -1,7 +1,5 @@
 use crate::log::{Severity, Level};
 
-extern crate alloc;
-use alloc::collections::BTreeMap;
 
 #[derive(Copy, Clone)]
 pub struct ModuleMeta {
@@ -11,16 +9,16 @@ pub struct ModuleMeta {
 
 pub struct ModuleMetaManager {
     // meta: BTreeMap<&'static str, ModuleMeta>,
-    meta: heapless::FnvIndexMap<&'static str, ModuleMeta, 16>,
+    // meta: heapless::FnvIndexMap<&'static str, ModuleMeta, 16>,
+    meta: super::map::Map<&'static str, ModuleMeta>,
     allow_unregistered: bool
 }
-
 
 impl ModuleMetaManager {
     pub const fn new() -> Self {
         Self {
             // meta: BTreeMap::new(),
-            meta: heapless::FnvIndexMap::new(),
+            meta: super::map::Map::new(),
             allow_unregistered: false
         }
     }
