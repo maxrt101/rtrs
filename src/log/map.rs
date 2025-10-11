@@ -3,11 +3,8 @@ extern crate alloc;
 #[cfg(feature = "log_meta_dynamic")]
 pub type Map<K, V> = alloc::collections::BTreeMap<K, V>;
 
-#[cfg(feature = "log_meta_fixed_16")]
-pub type Map<K, V> = heapless::FnvIndexMap<K, V, 16>;
+#[cfg(feature = "log_meta_fixed")]
+const LOG_META_CAPACITY: usize = envint::envint!("RTRS_LOG_META_FIXED_SIZE", 16);
 
-#[cfg(feature = "log_meta_fixed_64")]
-pub type Map<K, V> = heapless::FnvIndexMap<K, V, 64>;
-
-#[cfg(feature = "log_meta_fixed_128")]
-pub type Map<K, V> = heapless::FnvIndexMap<K, V, 128>;
+#[cfg(feature = "log_meta_fixed")]
+pub type Map<K, V> = heapless::FnvIndexMap<K, V, LOG_META_CAPACITY>;

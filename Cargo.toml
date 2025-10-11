@@ -7,20 +7,18 @@ edition = "2024"
 embedded-hal = "0.2.7"
 heapless = "0.8.0"
 void = { version = "1.0.2", default-features = false }
+envint = "0.1.1"
 
 [features]
-default = ["storage_dynamic", "log_meta_dynamic"]
+#default = ["storage_dynamic", "log_meta_dynamic"]
+default = ["storage_fixed", "log_meta_fixed"]
 
 lock_custom = []
 track_locks = []
 track_borrows = []
 
 storage_dynamic = []
-storage_fixed_16 = []
-storage_fixed_64 = []
-storage_fixed_128 = []
+storage_fixed = []
 
 log_meta_dynamic = []
-log_meta_fixed_16 = []
-log_meta_fixed_64 = []
-log_meta_fixed_128 = []
+log_meta_fixed = []
