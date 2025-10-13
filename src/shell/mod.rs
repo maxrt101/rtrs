@@ -1,23 +1,32 @@
 pub mod script;
 pub mod command;
+mod types;
 
 use core::fmt::Write;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 use crate::tty::{Tty, TtyEvent};
+use crate::channel::SubscriberId;
 use crate::log::console::CONSOLE_OBJECT_NAME;
 use crate::{print, println, object_with, object_with_mut};
-use crate::channel::SubscriberId;
 
 use command::Command;
 
 crate::logger!("SHELL");
 
+
+#[macro_export]
+macro_rules! shell {
+    ($($cmd:expr),* $(,)?) => {
+        rtrs::shell::Shell::new(&[$($cmd),*])
+    };
+}
+
 pub struct Shell {
+    env:                     script::Environment,
     // TODO: Make size configurable (same as in object::map::Map & log::map::Map)
-    input: heapless::String<32>,
-    env: script::Environment,
-    input_changed: AtomicBool,
+    input:                   types::Input,
+    input_changed:           AtomicBool,
     tty_event_subscriber_id: SubscriberId,
 }
 
@@ -25,10 +34,12 @@ pub struct Shell {
 impl Shell {
     pub fn new(commands: &'static [Command]) -> Self {
         Self {
-            env: script::Environment::new(commands),
-            input: heapless::String::new(),
+            env:           script::Environment::new(commands),
+            input:         heapless::String::new(),
             input_changed: AtomicBool::new(true),
-            tty_event_subscriber_id: object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.subscribe().unwrap()),
+            tty_event_subscriber_id: {
+                object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.subscribe().unwrap())
+            },
         }
     }
 

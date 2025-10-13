@@ -1,4 +1,4 @@
-mod map;
+mod types;
 mod storage;
 mod macros;
 

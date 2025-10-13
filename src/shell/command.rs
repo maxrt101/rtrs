@@ -6,13 +6,6 @@ pub struct Command {
 }
 
 #[macro_export]
-macro_rules! commands {
-    ($($cmd:expr),* $(,)?) => {
-        &[$($cmd),*]
-    };
-}
-
-#[macro_export]
 macro_rules! command {
     ($name:expr, $help:expr, $handler:expr) => {
         $crate::shell::command::Command { name: $name, help: $help, handler: $handler }

@@ -7,13 +7,13 @@ use crate::object::{BoxObject, Object};
 use crate::sync::{Ref, RefMut, RwLock};
 
 pub struct Storage {
-    storage: super::map::Map<&'static str, RwLock<BoxObject>>
+    storage: super::types::ObjectStorage<&'static str, RwLock<BoxObject>>
 }
 
 impl Storage {
     pub const fn new() -> Self {
         Self {
-            storage: super::map::Map::new()
+            storage: super::types::ObjectStorage::new()
         }
     }
 

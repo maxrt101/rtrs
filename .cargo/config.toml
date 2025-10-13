@@ -1,3 +1,11 @@
+# Example overriding fixed storage sizes
+
+[env]
+RTRS_STORAGE_FIXED_SIZE = "32"
+RTRS_LOG_META_FIXED_SIZE = "32"
+RTRS_SHELL_INPUT_SIZE = "64"
+RTRS_SHELL_ARGS_SIZE = "8"
+
 # Example profiles for projects
 
 [profile.dev]

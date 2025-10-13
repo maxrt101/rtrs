@@ -8,7 +8,7 @@ pub struct ModuleMeta {
 }
 
 pub struct ModuleMetaManager {
-    meta: super::map::Map<&'static str, ModuleMeta>,
+    meta: super::types::MetaStorage<&'static str, ModuleMeta>,
     allow_unregistered: bool
 }
 
@@ -16,7 +16,7 @@ impl ModuleMetaManager {
     pub const fn new() -> Self {
         Self {
             // meta: BTreeMap::new(),
-            meta: super::map::Map::new(),
+            meta: super::types::MetaStorage::new(),
             allow_unregistered: false
         }
     }

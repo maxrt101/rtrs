@@ -6,7 +6,7 @@ pub mod meta;
 pub mod record;
 pub mod macros;
 pub mod logger;
-mod map;
+mod types;
 
 pub use logger::Logger;
 pub use record::{Record, DefaultRecord};

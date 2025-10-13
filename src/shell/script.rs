@@ -80,9 +80,6 @@ impl<'a> Iterator for TokenizedIterator<'a> {
     }
 }
 
-// TODO: Make size configurable (same as in object::map::Map & log::map::Map)
-type Arguments<'a> = heapless::Vec::<&'a str, 10>;
-
 pub struct Environment {
     commands: &'static [Command]
     // ... - env
@@ -93,7 +90,7 @@ impl Environment {
         Self { commands }
     }
 
-    fn run_command(&self, args: &Arguments) -> Option<i8> {
+    fn run_command(&self, args: &super::types::Arguments) -> Option<i8> {
         if args.is_empty() {
             return None;
         }
@@ -125,7 +122,7 @@ impl Environment {
         let mut tokens = TokenizedIterator::new(src);
 
         while !tokens.is_eof() {
-            let mut args = Arguments::new();
+            let mut args = super::types::Arguments::new();
 
             while let Some(token) = tokens.next() {
                 match token {
