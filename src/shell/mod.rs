@@ -1,35 +1,22 @@
-use core::str::SplitWhitespace;
+pub mod script;
+pub mod command;
+
 use core::fmt::Write;
 use core::sync::atomic::{AtomicBool, Ordering};
+
 use crate::tty::{Tty, TtyEvent};
 use crate::log::console::CONSOLE_OBJECT_NAME;
 use crate::{print, println, object_with, object_with_mut};
-
 use crate::channel::SubscriberId;
 
-pub struct Command {
-    pub name: &'static str,
-    pub help: &'static str,
-    pub handler: fn(SplitWhitespace) -> i8
-}
+use command::Command;
 
-#[macro_export]
-macro_rules! commands {
-    ($($cmd:expr),* $(,)?) => {
-        &[$($cmd),*]
-    };
-}
-
-#[macro_export]
-macro_rules! command {
-    ($name:expr, $help:expr, $handler:expr) => {
-        $crate::shell::Command { name: $name, help: $help, handler: $handler }
-    };
-}
+crate::logger!("SHELL");
 
 pub struct Shell {
+    // TODO: Make size configurable (same as in object::map::Map & log::map::Map)
     input: heapless::String<32>,
-    commands: &'static [Command],
+    env: script::Environment,
     input_changed: AtomicBool,
     tty_event_subscriber_id: SubscriberId,
 }
@@ -38,13 +25,13 @@ pub struct Shell {
 impl Shell {
     pub fn new(commands: &'static [Command]) -> Self {
         Self {
-            commands,
+            env: script::Environment::new(commands),
             input: heapless::String::new(),
             input_changed: AtomicBool::new(true),
             tty_event_subscriber_id: object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.subscribe().unwrap()),
         }
     }
-   
+
     pub fn cycle(&mut self) {
         self.prompt();
 
@@ -79,29 +66,7 @@ impl Shell {
     }
 
     fn run(&mut self) {
-        // FIXME: <SplitWhitespace as Iter>::next uses considerable amount of space
-        let mut tokens = self.input.split_whitespace();
-
-        if let Some(name) = tokens.next() {
-            if name == "help" {
-                for cmd in self.commands {
-                    println!("{} - {}", cmd.name, cmd.help);
-                }
-            } else {
-                let mut result: Option<i8> = None;
-
-                for cmd in self.commands {
-                    if cmd.name == name {
-                        result = Some((cmd.handler)(tokens));
-                        break;
-                    }
-                }
-
-                if matches!(result, None) {
-                    println!("Unknown command: {}", name);
-                }
-            }
-        }
+        self.env.run(self.input.as_str());
 
         self.input.clear();
     }
