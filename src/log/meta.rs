@@ -8,8 +8,6 @@ pub struct ModuleMeta {
 }
 
 pub struct ModuleMetaManager {
-    // meta: BTreeMap<&'static str, ModuleMeta>,
-    // meta: heapless::FnvIndexMap<&'static str, ModuleMeta, 16>,
     meta: super::map::Map<&'static str, ModuleMeta>,
     allow_unregistered: bool
 }
