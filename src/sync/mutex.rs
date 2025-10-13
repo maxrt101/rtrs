@@ -152,15 +152,15 @@ impl<T> Mutex<T> {
 
         self.lock.store(true, Ordering::Relaxed);
 
-        #[cfg(feature = "lock_custom")]
-        unsafe { crate::sync::rtrs_lock_acquire() };
+        #[cfg(feature = "critical_section_custom")]
+        unsafe { crate::sync::rtrs_critical_section_acquire() };
     }
 
     pub unsafe fn release(&self) {
         self.lock.store(false, Ordering::Relaxed);
 
-        #[cfg(feature = "lock_custom")]
-        unsafe { crate::sync::rtrs_lock_release() };
+        #[cfg(feature = "critical_section_custom")]
+        unsafe { crate::sync::rtrs_critical_section_release() };
     }
 
     fn try_acquire(&self) -> bool {

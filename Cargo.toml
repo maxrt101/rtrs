@@ -13,7 +13,7 @@ envint = "0.1.1"
 #default = ["storage_dynamic", "log_meta_dynamic"]
 default = ["storage_fixed", "log_meta_fixed"]
 
-lock_custom = []
+critical_section_custom = []
 track_locks = []
 track_borrows = []
 

@@ -38,11 +38,17 @@ impl BorrowCounter {
         #[cfg(feature = "track_borrows")]
         self.borrowed_at.set(Some(core::panic::Location::caller()));
 
+        #[cfg(feature = "critical_section_custom")]
+        unsafe { crate::sync::rtrs_critical_section_acquire() };
+
         self.borrow.store(current + 1, Ordering::SeqCst);
     }
 
     pub unsafe fn release_ref(&self) {
         self.borrow.store(self.borrow.load(Ordering::Acquire) - 1, Ordering::SeqCst);
+
+        #[cfg(feature = "critical_section_custom")]
+        unsafe { crate::sync::rtrs_critical_section_release() };
     }
 
     #[cfg_attr(feature = "track_borrows", track_caller)]
@@ -76,11 +82,17 @@ impl BorrowCounter {
         #[cfg(feature = "track_borrows")]
         self.borrowed_at.set(Some(core::panic::Location::caller()));
 
+        #[cfg(feature = "critical_section_custom")]
+        unsafe { crate::sync::rtrs_critical_section_acquire() };
+
         self.borrow.store(current - 1, Ordering::SeqCst);
     }
 
     pub unsafe fn release_mut(&self) {
         self.borrow.store(self.borrow.load(Ordering::Acquire) + 1, Ordering::SeqCst);
+
+        #[cfg(feature = "critical_section_custom")]
+        unsafe { crate::sync::rtrs_critical_section_release() };
     }
     
     pub unsafe fn reset_borrows(&self) {

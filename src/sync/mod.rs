@@ -8,8 +8,8 @@ pub use rwlock::RwLock;
 pub use refs::{Ref, RefMut};
 pub use borrow::{BorrowCounter, BorrowLocation};
 
-#[cfg(feature = "lock_custom")]
+#[cfg(feature = "critical_section_custom")]
 unsafe extern "Rust" {
-    fn rtrs_lock_acquire();
-    fn rtrs_lock_release();
+    fn rtrs_critical_section_acquire();
+    fn rtrs_critical_section_release();
 }
