@@ -1,11 +1,28 @@
+use super::types::Arguments;
 use super::command::Command;
+use super::env::Environment;
 use super::LOGGER;
+
+/*
+TODO: Implement ENV
+TODO: Expand tokens & parsing
+TODO: Maybe add if/else
+TODO: Maybe add while
+TODO: Maybe add functions (fn)
+TODO: All feature must be on/off configurable
+*/
 
 #[derive(Eq, PartialEq)]
 pub enum Token<'a> {
     Word(&'a str),
+    Dollar(&'a str),
     Semicolon,
-    Dollar,
+
+    // LeftBrace,
+    // RightBrace,
+
+    // If,
+    // Else,
 }
 
 // TODO: Idea: pass Tokenizer as Arguments to each command handler as an iterator
@@ -40,6 +57,22 @@ impl<'a> TokenizedIterator<'a> {
     fn is_special(&self) -> bool {
         matches!(self.current(), Some(b';') | Some(b'$'))
     }
+
+    fn tokenize_next_word(&mut self) -> Option<&'a str> {
+        self.start = self.index;
+
+        while !self.is_eof() && !self.is_whitespace() && !self.is_special() {
+            self.index += 1;
+        }
+
+        if self.start == self.index {
+            return None;
+        }
+
+        let word = unsafe { str::from_utf8_unchecked(&self.input.as_bytes()[self.start..self.index]) };
+
+        Some(word)
+    }
 }
 
 impl<'a> Iterator for TokenizedIterator<'a> {
@@ -65,48 +98,33 @@ impl<'a> Iterator for TokenizedIterator<'a> {
 
         if matches!(self.current(), Some(b'$')) {
             self.index += 1;
-            return Some(Token::Dollar);
+            return self.tokenize_next_word().map(|w| Token::Dollar(w));
         }
 
-        self.start = self.index;
-
-        while !self.is_eof() && !self.is_whitespace() && !self.is_special() {
-            self.index += 1;
-        }
-
-        let word = unsafe { str::from_utf8_unchecked(&self.input.as_bytes()[self.start..self.index]) };
-
-        Some(Token::Word(word))
+        self.tokenize_next_word().map(|w| Token::Word(w))
     }
 }
 
-pub struct Environment {
-    commands: &'static [Command]
-    // ... - env
+pub struct Runtime {
+    pub commands: &'static [Command],
+    pub env:      Environment,
 }
 
-impl Environment {
+impl Runtime {
     pub fn new(commands: &'static [Command]) -> Self {
-        Self { commands }
+        Self { commands, env: Environment::new() }
     }
 
-    fn run_command(&self, args: &super::types::Arguments) -> Option<i8> {
+    fn run_command(&mut self, args: &Arguments) -> Option<i8> {
         if args.is_empty() {
             return None;
-        }
-
-        if args[0] == "help" {
-            for cmd in self.commands {
-                crate::info!("{} - {}", cmd.name, cmd.help);
-            }
-            return Some(0);
         }
 
         let mut result = None;
 
         for cmd in self.commands {
             if cmd.name == args[0] {
-                result = Some((cmd.handler)(&args.as_slice()[1..]));
+                result = Some((cmd.handler)(self, &args.as_slice()[1..]));
                 break;
             }
         }
@@ -118,22 +136,28 @@ impl Environment {
         result
     }
 
-    pub fn run(&self, src: &str) {
+    pub fn run(&mut self, src: &str) {
         let mut tokens = TokenizedIterator::new(src);
 
         while !tokens.is_eof() {
-            let mut args = super::types::Arguments::new();
+            let mut args = Arguments::new();
 
             while let Some(token) = tokens.next() {
                 match token {
                     Token::Word(word) => {
                         args.push(word).unwrap();
                     }
+                    Token::Dollar(name) => {
+                        let val = self.env.get(name).unwrap_or("");
+
+                        // FIXME: Nasty workaround to make `self.env` possible to pass to command
+                        //        handlers. Only danger this presents, is that if command handler
+                        //        blindly writes to `env` and then reads `args`, which might
+                        //        contain a variable from `env` - the args become invalid
+                        args.push(unsafe { &*(val as *const _) }).unwrap();
+                    }
                     Token::Semicolon => {
                         break;
-                    }
-                    Token::Dollar => {
-                        todo!()
                     }
                 }
             }

@@ -1,5 +1,7 @@
+pub mod builtins;
 pub mod script;
 pub mod command;
+pub mod env;
 mod types;
 
 use core::fmt::Write;
@@ -14,6 +16,13 @@ use command::Command;
 
 crate::logger!("SHELL");
 
+/*
+TODO: Handle arrow keys
+TODO: Add history buffer (behind a feature flag)
+TODO: Add left/right handling
+TODO: Add ENV
+TODO: Add optional (via a feature) `builtins` module & implement some basic things (echo/time/env/set/eval/exec/etc)
+*/
 
 #[macro_export]
 macro_rules! shell {
@@ -23,8 +32,7 @@ macro_rules! shell {
 }
 
 pub struct Shell {
-    env:                     script::Environment,
-    // TODO: Make size configurable (same as in object::map::Map & log::map::Map)
+    rt:                      script::Runtime,
     input:                   types::Input,
     input_changed:           AtomicBool,
     tty_event_subscriber_id: SubscriberId,
@@ -34,7 +42,7 @@ pub struct Shell {
 impl Shell {
     pub fn new(commands: &'static [Command]) -> Self {
         Self {
-            env:           script::Environment::new(commands),
+            rt:            script::Runtime::new(commands),
             input:         heapless::String::new(),
             input_changed: AtomicBool::new(true),
             tty_event_subscriber_id: {
@@ -77,7 +85,7 @@ impl Shell {
     }
 
     fn run(&mut self) {
-        self.env.run(self.input.as_str());
+        self.rt.run(self.input.as_str());
 
         self.input.clear();
     }

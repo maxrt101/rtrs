@@ -7,6 +7,8 @@ fn main() {
         ("RTRS_LOG_META_FIXED_SIZE", "16"),
         ("RTRS_SHELL_INPUT_SIZE",    "32"),
         ("RTRS_SHELL_ARGS_SIZE",     "8"),
+        ("RTRS_SHELL_ENV_SIZE",      "8"),
+        ("RTRS_SHELL_VAR_SIZE",      "16"),
     ].iter().cloned().collect();
     
     for var in vars {
