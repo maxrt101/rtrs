@@ -10,6 +10,16 @@ macro_rules! to_empty_result {
 }
 
 #[macro_export]
+macro_rules! ok {
+    ($e:expr) => {
+        match $e {
+            Ok(v) => Ok(v),
+            Err(_) => Err(()),
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! timeit {
     ($code:block) => {{
         let start = rtrs::time::global_tick();
