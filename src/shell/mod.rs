@@ -43,7 +43,7 @@ impl Shell {
     pub fn new(commands: &'static [Command]) -> Self {
         Self {
             rt:            script::Runtime::new(commands),
-            input:         heapless::String::new(),
+            input:         types::Input::new(),
             input_changed: AtomicBool::new(true),
             tty_event_subscriber_id: {
                 object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.subscribe().unwrap())
@@ -64,7 +64,7 @@ impl Shell {
                     self.input.pop();
                 }
                 _ => {
-                    self.input.push(b as char).unwrap();
+                    let _ = self.input.push(b as char);
                 }
             }
 

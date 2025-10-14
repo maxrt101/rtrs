@@ -1,4 +1,6 @@
 use super::types::{EnvVar, EnvStorage};
+use crate::ok;
+
 use core::str::FromStr;
 
 pub struct Environment {
@@ -11,8 +13,8 @@ impl Environment {
     }
 
     pub fn set(&mut self, key: &str, value: &str) -> Result<(), ()> {
-        let key = EnvVar::from_str(key)?;
-        let value = EnvVar::from_str(value)?;
+        let key = ok!(EnvVar::from_str(key))?;
+        let value = ok!(EnvVar::from_str(value))?;
 
         if self.env.contains_key(&key) {
             if let Some(val) = self.env.get_mut(&key) {

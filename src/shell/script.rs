@@ -1,7 +1,9 @@
-use super::types::Arguments;
+use super::types::{Arguments, EnvVar};
 use super::command::Command;
 use super::env::Environment;
 use super::LOGGER;
+
+use core::fmt::Write;
 
 /*
 TODO: Implement ENV
@@ -18,11 +20,8 @@ pub enum Token<'a> {
     Dollar(&'a str),
     Semicolon,
 
-    // LeftBrace,
-    // RightBrace,
-
-    // If,
-    // Else,
+    And,
+    Or,
 }
 
 // TODO: Idea: pass Tokenizer as Arguments to each command handler as an iterator
@@ -55,7 +54,7 @@ impl<'a> TokenizedIterator<'a> {
     }
 
     fn is_special(&self) -> bool {
-        matches!(self.current(), Some(b';') | Some(b'$'))
+        matches!(self.current(), Some(b';') | Some(b'$') | Some(b'&') | Some(b'|'))
     }
 
     fn tokenize_next_word(&mut self) -> Option<&'a str> {
@@ -101,6 +100,16 @@ impl<'a> Iterator for TokenizedIterator<'a> {
             return self.tokenize_next_word().map(|w| Token::Dollar(w));
         }
 
+        if matches!(self.current(), Some(b'&')) {
+            self.index += 1;
+            return Some(Token::And);
+        }
+
+        if matches!(self.current(), Some(b'|')) {
+            self.index += 1;
+            return Some(Token::Or);
+        }
+
         self.tokenize_next_word().map(|w| Token::Word(w))
     }
 }
@@ -139,13 +148,15 @@ impl Runtime {
     pub fn run(&mut self, src: &str) {
         let mut tokens = TokenizedIterator::new(src);
 
+        let mut condition = None;
+
         while !tokens.is_eof() {
             let mut args = Arguments::new();
 
             while let Some(token) = tokens.next() {
                 match token {
                     Token::Word(word) => {
-                        args.push(word).unwrap();
+                        let _ = args.push(word);
                     }
                     Token::Dollar(name) => {
                         let val = self.env.get(name).unwrap_or("");
@@ -154,15 +165,41 @@ impl Runtime {
                         //        handlers. Only danger this presents, is that if command handler
                         //        blindly writes to `env` and then reads `args`, which might
                         //        contain a variable from `env` - the args become invalid
-                        args.push(unsafe { &*(val as *const _) }).unwrap();
+                        let _ = args.push(unsafe { &*(val as *const _) });
                     }
                     Token::Semicolon => {
+                        break;
+                    }
+                    Token::And => {
+                        condition = Some(Token::And);
+                        break;
+                    }
+                    Token::Or => {
+                        condition = Some(Token::Or);
                         break;
                     }
                 }
             }
 
-            self.run_command(&args);
+            if let Some(res) = self.run_command(&args) {
+                let mut s = EnvVar::new();
+                let _ = write!(&mut s, "{}", res);
+                let _ = self.env.set("?", s.as_str());
+
+                match condition {
+                    Some(Token::And) => {
+                        if res != 0 {
+                            break;
+                        }
+                    }
+                    Some(Token::Or) => {
+                        if res == 0 {
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
         }
     }
 }

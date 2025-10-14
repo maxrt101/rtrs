@@ -11,13 +11,13 @@ pub fn cmd_help(rt: &mut Runtime, args: &[&str]) -> i8 {
                 return 0;
             }
         }
-        
+
         1
     } else {
         for cmd in rt.commands {
             crate::info!("{} - {}", cmd.name, cmd.help);
         }
-        
+
         0
     }
 }
@@ -28,7 +28,7 @@ pub fn cmd_echo(_rt: &mut Runtime, args: &[&str]) -> i8 {
         crate::print!("{} ", arg);
     }
     crate::println!();
-    
+
     0
 }
 
@@ -55,8 +55,8 @@ pub fn cmd_set(rt: &mut Runtime, args: &[&str]) -> i8 {
         crate::error!("Usage: set NAME VALUE");
         return 1;
     }
-    
+
     let _ = rt.env.set(args[0], args[1]);
-    
+
     0
 }
