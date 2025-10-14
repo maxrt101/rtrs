@@ -8,7 +8,7 @@ use core::fmt::Write;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 use crate::tty::{Tty, TtyEvent};
-use crate::channel::SubscriberId;
+use crate::itc::channel::SubscriberId;
 use crate::log::console::CONSOLE_OBJECT_NAME;
 use crate::{print, println, object_with, object_with_mut};
 

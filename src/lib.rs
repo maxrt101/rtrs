@@ -10,8 +10,7 @@ pub mod led;
 pub mod shell;
 pub mod util;
 pub mod log;
-pub mod pubsub;
-pub mod channel;
+mod itc;
 
 pub use tty::ansi::*;
 pub use tty::ascii::*;

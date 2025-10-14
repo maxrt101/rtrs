@@ -1,33 +1,30 @@
 # Example overriding fixed storage sizes
 
 [env]
-RTRS_STORAGE_FIXED_SIZE = "32"
+RTRS_STORAGE_FIXED_SIZE  = "32"
 RTRS_LOG_META_FIXED_SIZE = "32"
-RTRS_SHELL_INPUT_SIZE = "64"
-RTRS_SHELL_ARGS_SIZE = "8"
-RTRS_SHELL_ENV_SIZE = "8"
-RTRS_SHELL_VAR_SIZE = "16"
+RTRS_SHELL_INPUT_SIZE    = "64"
+RTRS_SHELL_ARGS_SIZE     = "8"
+RTRS_SHELL_ENV_SIZE      = "8"
+RTRS_SHELL_VAR_SIZE      = "16"
+RTRS_CHANNEL_SIZE        = "8"
 
 # Example profiles for projects
 
 [profile.dev]
 opt-level = "s"
+panic     = 'abort'
 
 [profile.release]
-opt-level = "z"
+opt-level        = "z"
 debug-assertions = false
-overflow-checks = false
-debug = true
-
-[profile.release-lto]
-inherits = "release"
-lto = true
+overflow-checks  = false
+panic            = 'abort'
+debug            = true
+lto              = true
 
 [profile.dev.package."*"]
 inherits = "dev"
 
 [profile.release.package."*"]
 inherits = "release"
-
-[profile.release-lto.package."*"]
-inherits = "release-lto"

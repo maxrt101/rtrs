@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use alloc::vec::Vec;
+use super::types::ChannelVec;
 
 pub type SubscriberId = usize;
 type SubscriberBitmap = usize;
@@ -10,18 +10,16 @@ pub struct Message<T: Copy + Clone> {
     data: T,
 }
 
-// TODO: Don't use Vec?
-//       OR maybe create a fixed-memory version (event bitmask? IDK)
 pub struct Channel<T: Copy + Clone> {
     subscribers: SubscriberBitmap,
-    queue: Vec<Message<T>>,
+    queue: ChannelVec<Message<T>>,
 }
 
 impl<T: Copy + Clone> Channel<T> {
     pub fn new() -> Self {
         Self {
             subscribers: 0,
-            queue: Vec::new(),
+            queue: ChannelVec::new(),
         }
     }
 
@@ -51,7 +49,7 @@ impl<T: Copy + Clone> Channel<T> {
 
     pub fn send(&mut self, data: T) {
         if self.subscribers != 0 {
-            self.queue.push(Message { data, received: 0 });
+            let _ = self.queue.push(Message { data, received: 0 });
         }
     }
 

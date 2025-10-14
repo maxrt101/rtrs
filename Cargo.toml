@@ -10,8 +10,8 @@ void = { version = "1.0.2", default-features = false }
 envint = "0.1.1"
 
 [features]
-#default = ["storage_dynamic", "log_meta_dynamic", "shell_input_dynamic", "shell_args_dynamic", "shell_env_dynamic"]
-default = ["storage_fixed", "log_meta_fixed", "shell_input_fixed", "shell_args_fixed", "shell_env_fixed"]
+#default = ["storage_dynamic", "log_meta_dynamic", "shell_input_dynamic", "shell_args_dynamic", "shell_env_dynamic", "channel_dynamic"]
+default = ["storage_fixed", "log_meta_fixed", "shell_input_fixed", "shell_args_fixed", "shell_env_fixed", "channel_fixed"]
 
 critical_section_custom = []
 track_locks = []
@@ -31,3 +31,6 @@ shell_args_fixed = []
 
 shell_env_dynamic = []
 shell_env_fixed = []
+
+channel_dynamic = []
+channel_fixed = []

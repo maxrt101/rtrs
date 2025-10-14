@@ -2,7 +2,7 @@ pub mod ansi;
 pub mod ascii;
 
 // use crate::pubsub::{Publisher, Subscriber};
-use crate::channel::{Channel, SubscriberId};
+use crate::itc::channel::{Channel, SubscriberId};
 use crate::object::Object;
 use crate::time::Timeout;
 

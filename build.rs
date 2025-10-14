@@ -9,6 +9,7 @@ fn main() {
         ("RTRS_SHELL_ARGS_SIZE",     "8"),
         ("RTRS_SHELL_ENV_SIZE",      "8"),
         ("RTRS_SHELL_VAR_SIZE",      "16"),
+        ("RTRS_CHANNEL_SIZE",        "8"),
     ].iter().cloned().collect();
     
     for var in vars {
