@@ -1,4 +1,5 @@
 pub mod futures;
+pub mod sched;
 pub mod event;
 pub mod tcb;
 pub mod ctx;
@@ -14,40 +15,60 @@ use crate::task_yield;
 extern crate alloc;
 use alloc::boxed::Box;
 use core::marker::PhantomData;
+
 use core::pin::Pin;
 use core::task::{Context, Poll};
+use crate::task::tcb::TaskFlags;
+/*
+TODO: Stabilize `TaskObject` (or impl `Object` for `Task` or something)
+TODO: Maybe create a `TaskManager`? It could store `Box<Task>` or use `object::Storage`
+TODO: Create `rtrs::task::global` for storing current running task info
+TODO: Based on `global` implement output redirecting demo (logger::log -> global::get_task().stdout.write() ?)
+TODO: Create demo on dynamic task spawning
+*/
 
 pub struct Task<'a, R = ()> {
-    pub future: Box<dyn Future<Output = R> + 'a>,
-    pub tcb: TaskControlBlock,
-    _a: PhantomData<&'a ()>,
+    future: Box<dyn Future<Output = R> + 'a>,
+    tcb:    TaskControlBlock,
+    _a:     PhantomData<&'a ()>,
 }
 
 impl<'a, R> Task<'a, R> {
     pub fn new<F: Future<Output = R> + 'a>(f: F) -> Self {
         Self {
             future: Box::new(f),
-            tcb: TaskControlBlock::new(),
-            _a: PhantomData,
+            tcb:    TaskControlBlock::new(),
+            _a:     PhantomData,
         }
     }
 
-    // #[inline]
     pub fn pend(&self) {
         let _ = self.tcb.lock();
         self.tcb.pend();
     }
 
-    // #[inline]
     pub fn ready(&self) {
         let _ = self.tcb.lock();
         self.tcb.ready()
     }
 
-    // #[inline]
     pub fn done(&self) {
         let _ = self.tcb.lock();
         self.tcb.done()
+    }
+
+    pub fn prio(&self) -> u8 {
+        self.tcb.prio()
+    }
+
+    pub fn set_prio(&mut self, prio: u8) {
+        let _ = self.tcb.lock();
+        self.tcb.set_prio(prio);
+    }
+    
+    pub fn get_clear_flag(&self, flag: TaskFlags) -> bool {
+        let _ = self.tcb.lock();
+        self.tcb.get_clear_flag(flag)
     }
 
     #[inline]

@@ -1,4 +1,5 @@
 use core::sync::atomic::{AtomicU8, AtomicBool, Ordering};
+use crate::bit_set;
 
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum TaskState {
@@ -39,6 +40,12 @@ impl core::fmt::Display for TaskState {
     }
 }
 
+#[derive(Copy, Clone)]
+pub enum TaskFlags {
+    PrioChanged = 1 << 0,
+    Woken       = 1 << 1,
+}
+
 pub struct TaskControlBlockGuard<'a> {
     tcb: &'a TaskControlBlock,
 }
@@ -50,15 +57,19 @@ impl<'a> Drop for TaskControlBlockGuard<'a> {
 }
 
 pub struct TaskControlBlock {
-    pub state: AtomicU8,
-    pub lock: AtomicBool,
+    pub state:    AtomicU8,
+    pub lock:     AtomicBool,
+    pub priority: AtomicU8,
+    pub flags:    AtomicU8,
 }
 
 impl TaskControlBlock {
     pub fn new() -> Self {
         Self {
-            state: AtomicU8::new(TaskState::Ready.into()),
-            lock: AtomicBool::new(false),
+            state:    AtomicU8::new(TaskState::Ready.into()),
+            lock:     AtomicBool::new(false),
+            priority: AtomicU8::new(0),
+            flags:    AtomicU8::new(0)
         }
     }
 
@@ -100,6 +111,7 @@ impl TaskControlBlock {
 
     pub fn ready(&self) {
         // TODO: Can't run if paused
+        self.set_flag(TaskFlags::Woken, true);
         self.state.store(TaskState::Ready.into(), Ordering::SeqCst);
     }
 
@@ -116,11 +128,44 @@ impl TaskControlBlock {
         self.state.store(TaskState::Ready.into(), Ordering::SeqCst);
     }
 
+    pub fn prio(&self) -> u8 {
+        self.priority.load(Ordering::SeqCst)
+    }
+
+    pub fn set_prio(&self, prio: u8) {
+        if self.prio() != prio {
+            self.set_flag(TaskFlags::PrioChanged, true);
+        }
+        self.priority.store(prio, Ordering::SeqCst);
+    }
+
     pub fn get_state(&self) -> TaskState {
         TaskState::try_from(self.state.load(Ordering::Acquire)).unwrap()
     }
 
     pub fn is_state(&self, s: TaskState) -> bool {
         s == self.get_state()
+    }
+
+    fn set_flag(&self, flag: TaskFlags, set: bool) {
+        self.flags.store(
+            if set {
+                self.flags.load(Ordering::Relaxed) | flag as u8
+            } else {
+                self.flags.load(Ordering::Relaxed) & !(flag as u8)
+            },
+            Ordering::SeqCst
+        );
+    }
+
+    pub fn get_clear_flag(&self, flag: TaskFlags) -> bool {
+        let flags = self.flags.load(Ordering::Relaxed);
+        
+        if flags & flag as u8 != 0 {
+            self.set_flag(flag, false);
+            true
+        } else {
+            false
+        }
     }
 }
