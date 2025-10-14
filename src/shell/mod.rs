@@ -20,8 +20,6 @@ crate::logger!("SHELL");
 TODO: Handle arrow keys
 TODO: Add history buffer (behind a feature flag)
 TODO: Add left/right handling
-TODO: Add ENV
-TODO: Add optional (via a feature) `builtins` module & implement some basic things (echo/time/env/set/eval/exec/etc)
 */
 
 #[macro_export]
