@@ -7,14 +7,16 @@ use core::task::Poll;
 
 type SchedulerStorage<T> = alloc::vec::Vec<T>;
 
-pub struct Scheduler<R = ()> {
-    tasks: SchedulerStorage<Task<'static, R>>,
+pub struct Scheduler {
+    tasks: SchedulerStorage<Task<'static, ()>>,
+    idle:  Option<Task<'static>>,
 }
 
-impl<R> Scheduler<R> {
+impl Scheduler {
     pub fn new() -> Self {
         Self {
             tasks: SchedulerStorage::new(),
+            idle:  None,
         }
     }
 
@@ -40,27 +42,58 @@ impl<R> Scheduler<R> {
         self.tasks.is_empty()
     }
 
-    pub fn attach(&mut self, task: Task<'static, R>) {
+    pub fn attach(&mut self, task: Task<'static, ()>) {
         self.tasks.push(task);
         self.sort(true);
     }
 
     pub fn schedule(&mut self) {
         self.sort(self.sort_cond_check());
-
+        
+        let mut should_resort = false;
         let mut done = false;
+        let mut all_blocked = true;
 
-        for task in self.tasks.iter_mut() {
-            match task.poll() {
-                Poll::Ready(_) => {
-                    done = true;
+        for i in 0..self.tasks.len() {
+            if self.tasks[i].is_state(TaskState::Ready) {
+                all_blocked = false;
+                
+                unsafe { super::this::reset(); }
+
+                match self.tasks[i].poll() {
+                    Poll::Ready(_) => {
+                        done = true;
+                    }
+                    Poll::Pending => {}
                 }
-                Poll::Pending => {}
+
+                let mut global = super::this::GLOBAL.lock_mut();
+
+                if (*global).should_cancel {
+                    self.tasks[i].done();
+                }
+
+                while let Some(task) = (*global).new_tasks.pop_back() {
+                    self.tasks.push(task);
+                    should_resort = true;
+                }
             }
         }
 
+        unsafe { super::this::reset(); }
+
         if done {
             self.tasks.retain(|t| !t.is_state(TaskState::Done));
+        }
+        
+        if should_resort {
+            self.sort(true);
+        }
+        
+        if all_blocked {
+            if let Some(idle) = &mut self.idle {
+                let _ = idle.poll();
+            }
         }
     }
 
@@ -71,4 +104,4 @@ impl<R> Scheduler<R> {
     }
 }
 
-impl<R: 'static> crate::object::Object for Scheduler<R> {}
+impl crate::object::Object for Scheduler {}

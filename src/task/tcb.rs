@@ -1,5 +1,4 @@
 use core::sync::atomic::{AtomicU8, AtomicBool, Ordering};
-use crate::bit_set;
 
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum TaskState {

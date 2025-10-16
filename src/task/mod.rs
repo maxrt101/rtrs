@@ -1,28 +1,28 @@
 pub mod futures;
 pub mod sched;
 pub mod event;
+pub mod this;
 pub mod tcb;
 pub mod ctx;
 mod waker;
 mod macros;
 
-pub use ctx::ExecutionContext;
-pub use tcb::{TaskState, TaskControlBlock};
-pub use event::Event;
 pub use futures::{YieldFuture, TimeoutFuture};
+pub use tcb::{TaskState, TaskControlBlock};
+pub use ctx::ExecutionContext;
+pub use event::Event;
+
+use crate::task::tcb::TaskFlags;
 use crate::task_yield;
 
 extern crate alloc;
 use alloc::boxed::Box;
-use core::marker::PhantomData;
 
-use core::pin::Pin;
 use core::task::{Context, Poll};
-use crate::task::tcb::TaskFlags;
+use core::marker::PhantomData;
+use core::pin::Pin;
+
 /*
-TODO: Stabilize `TaskObject` (or impl `Object` for `Task` or something)
-TODO: Maybe create a `TaskManager`? It could store `Box<Task>` or use `object::Storage`
-TODO: Create `rtrs::task::global` for storing current running task info
 TODO: Based on `global` implement output redirecting demo (logger::log -> global::get_task().stdout.write() ?)
 TODO: Create demo on dynamic task spawning
 */
@@ -65,7 +65,7 @@ impl<'a, R> Task<'a, R> {
         let _ = self.tcb.lock();
         self.tcb.set_prio(prio);
     }
-    
+
     pub fn get_clear_flag(&self, flag: TaskFlags) -> bool {
         let _ = self.tcb.lock();
         self.tcb.get_clear_flag(flag)
