@@ -6,7 +6,6 @@ use super::LOGGER;
 use core::fmt::Write;
 
 /*
-TODO: Implement ENV
 TODO: Expand tokens & parsing
 TODO: Maybe add if/else
 TODO: Maybe add while
@@ -17,7 +16,8 @@ TODO: All feature must be on/off configurable
 #[derive(Eq, PartialEq)]
 pub enum Token<'a> {
     Word(&'a str),
-    Dollar(&'a str),
+    Variable(&'a str),
+
     Semicolon,
 
     And,
@@ -41,8 +41,12 @@ impl<'a> TokenizedIterator<'a> {
         }
     }
 
-    fn current(&self) -> Option<u8> {
+    fn current_ch(&self) -> Option<u8> {
         self.input.as_bytes().get(self.index).map(|v| *v)
+    }
+
+    fn next_ch(&mut self) -> Option<u8> {
+        self.input.as_bytes().get(self.index + 1).map(|v| *v)
     }
 
     fn is_eof(&self) -> bool {
@@ -50,11 +54,11 @@ impl<'a> TokenizedIterator<'a> {
     }
 
     fn is_whitespace(&self) -> bool {
-        matches!(self.current(), Some(b' ') | Some(b'\t'))
+        matches!(self.current_ch(), Some(b' ') | Some(b'\t'))
     }
 
     fn is_special(&self) -> bool {
-        matches!(self.current(), Some(b';') | Some(b'$') | Some(b'&') | Some(b'|'))
+        matches!(self.current_ch(), Some(b';') | Some(b'$') | Some(b'&') | Some(b'|'))
     }
 
     fn tokenize_next_word(&mut self) -> Option<&'a str> {
@@ -90,23 +94,23 @@ impl<'a> Iterator for TokenizedIterator<'a> {
             }
         }
 
-        if matches!(self.current(), Some(b';')) {
+        if matches!(self.current_ch(), Some(b';')) {
             self.index += 1;
             return Some(Token::Semicolon);
         }
 
-        if matches!(self.current(), Some(b'$')) {
+        if matches!(self.current_ch(), Some(b'$')) {
             self.index += 1;
-            return self.tokenize_next_word().map(|w| Token::Dollar(w));
+            return self.tokenize_next_word().map(|w| Token::Variable(w));
         }
 
-        if matches!(self.current(), Some(b'&')) {
-            self.index += 1;
+        if matches!(self.current_ch(), Some(b'&')) && matches!(self.next_ch(), Some(b'&')) {
+            self.index += 2;
             return Some(Token::And);
         }
 
-        if matches!(self.current(), Some(b'|')) {
-            self.index += 1;
+        if matches!(self.current_ch(), Some(b'|')) && matches!(self.next_ch(), Some(b'|')) {
+            self.index += 2;
             return Some(Token::Or);
         }
 
@@ -158,7 +162,7 @@ impl Runtime {
                     Token::Word(word) => {
                         let _ = args.push(word);
                     }
-                    Token::Dollar(name) => {
+                    Token::Variable(name) => {
                         let val = self.env.get(name).unwrap_or("");
 
                         // FIXME: Nasty workaround to make `self.env` possible to pass to command
