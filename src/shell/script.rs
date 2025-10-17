@@ -41,12 +41,12 @@ impl<'a> TokenizedIterator<'a> {
         }
     }
 
-    fn current_ch(&self) -> Option<u8> {
+    fn current(&self) -> Option<u8> {
         self.input.as_bytes().get(self.index).map(|v| *v)
     }
 
-    fn next_ch(&mut self) -> Option<u8> {
-        self.input.as_bytes().get(self.index + 1).map(|v| *v)
+    fn force_eof(&mut self) {
+        self.index = self.input.len();
     }
 
     fn is_eof(&self) -> bool {
@@ -54,11 +54,11 @@ impl<'a> TokenizedIterator<'a> {
     }
 
     fn is_whitespace(&self) -> bool {
-        matches!(self.current_ch(), Some(b' ') | Some(b'\t'))
+        matches!(self.current(), Some(b' ') | Some(b'\t'))
     }
 
     fn is_special(&self) -> bool {
-        matches!(self.current_ch(), Some(b';') | Some(b'$') | Some(b'&') | Some(b'|'))
+        matches!(self.current(), Some(b';') | Some(b'$') | Some(b'&') | Some(b'|'))
     }
 
     fn tokenize_next_word(&mut self) -> Option<&'a str> {
@@ -78,6 +78,27 @@ impl<'a> TokenizedIterator<'a> {
     }
 }
 
+macro_rules! tokenize_double {
+    ($self:expr, $ch:expr, $token:expr) => {
+        if matches!($self.current(), Some($ch)) {
+            $self.index += 1;
+
+            if matches!($self.current(), Some($ch)) {
+                $self.index += 1;
+                return Some($token);
+            } else {
+                crate::error!(
+                    "Unexpected character '{}'. Expected '{}'",
+                    $self.current().unwrap_or('?' as u8) as char,
+                    $ch as char
+                );
+                $self.force_eof();
+                return None;
+            }
+        }
+    };
+}
+
 impl<'a> Iterator for TokenizedIterator<'a> {
     type Item = Token<'a>;
 
@@ -86,6 +107,7 @@ impl<'a> Iterator for TokenizedIterator<'a> {
             return None;
         }
 
+        // TODO: Handle newline
         while self.is_whitespace() {
             self.index += 1;
 
@@ -94,25 +116,18 @@ impl<'a> Iterator for TokenizedIterator<'a> {
             }
         }
 
-        if matches!(self.current_ch(), Some(b';')) {
+        if matches!(self.current(), Some(b';')) {
             self.index += 1;
             return Some(Token::Semicolon);
         }
 
-        if matches!(self.current_ch(), Some(b'$')) {
+        if matches!(self.current(), Some(b'$')) {
             self.index += 1;
             return self.tokenize_next_word().map(|w| Token::Variable(w));
         }
 
-        if matches!(self.current_ch(), Some(b'&')) && matches!(self.next_ch(), Some(b'&')) {
-            self.index += 2;
-            return Some(Token::And);
-        }
-
-        if matches!(self.current_ch(), Some(b'|')) && matches!(self.next_ch(), Some(b'|')) {
-            self.index += 2;
-            return Some(Token::Or);
-        }
+        tokenize_double!(self, b'&', Token::And);
+        tokenize_double!(self, b'|', Token::Or);
 
         self.tokenize_next_word().map(|w| Token::Word(w))
     }
