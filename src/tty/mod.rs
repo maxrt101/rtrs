@@ -1,7 +1,6 @@
 pub mod ansi;
 pub mod ascii;
 
-// use crate::pubsub::{Publisher, Subscriber};
 use crate::itc::channel::{Channel, SubscriberId};
 use crate::object::Object;
 use crate::time::Timeout;
@@ -26,12 +25,10 @@ pub struct Tty {
 
 impl Tty {
     pub fn new(write: fn(u8), read: fn() -> Option<u8>) -> Self {
-        // Self { write, read, flags: 0, pubsub: Publisher::<TtyEvent>::new() }
         Self { write, read, flags: 0, event_channel: Channel::<TtyEvent>::new() }
     }
 
     pub fn write(&mut self, byte: u8) {
-        // self.pubsub.publish(TtyEvent::WriteHappened);
         self.event_channel.send(TtyEvent::WriteHappened);
         (self.write)(byte);
     }
@@ -52,10 +49,6 @@ impl Tty {
         None
     }
 
-    // pub fn subscribe(&mut self, subscriber: Subscriber<TtyEvent>) {
-    //     self.pubsub.subscribe(subscriber);
-    // }
-
     pub fn subscribe(&mut self) -> Option<SubscriberId> {
         self.event_channel.subscribe()
     }
@@ -68,10 +61,6 @@ impl Tty {
         self.event_channel.recv(id)
     }
 
-    // pub fn get_flag(&self, flag: TtyFlag) -> bool {
-    //     (self.flags & flag as u8) != 0
-    // }
-
     pub fn set_flag(&mut self, flag: TtyFlag, value: bool) {
         if value {
             self.flags |= flag as u8;
@@ -79,18 +68,6 @@ impl Tty {
             self.flags &= !(flag as u8);
         }
     }
-
-    // pub fn get_state_flag(&mut self, flag: TtyStateFlag) -> bool {
-    //     (self.state & flag as u8) != 0
-    // }
-    //
-    // pub fn set_state_flag(&mut self, flag: TtyStateFlag, value: bool) {
-    //     if value {
-    //         self.state |= flag as u8;
-    //     } else {
-    //         self.state &= !(flag as u8);
-    //     }
-    // }
 }
 
 impl Object for Tty {}
