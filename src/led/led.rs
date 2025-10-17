@@ -1,15 +1,16 @@
 use embedded_hal::digital::v2::OutputPin;
 use crate::{Action, Pattern, PatternExecutionContext};
-use void::Void;
 
-pub struct Led {
-    // led: &'static str,
-    pin: &'static mut (dyn OutputPin<Error = Void> + Send + Sync),
+extern crate alloc;
+use alloc::boxed::Box;
+
+pub struct Led<E> {
+    pin: Box<dyn OutputPin<Error = E> + Send + Sync>,
     ctx: PatternExecutionContext
 }
 
-impl Led {
-    pub fn new(pin: &'static mut (dyn OutputPin<Error = Void> + Send + Sync)) -> Self {
+impl<E> Led<E> {
+    pub fn new(pin: Box<dyn OutputPin<Error = E> + Send + Sync>) -> Self {
         Self {
             pin,
             ctx: PatternExecutionContext {
@@ -22,11 +23,11 @@ impl Led {
     }
 
     pub fn on(&mut self) {
-        self.pin.set_high().unwrap();
+        let _ = self.pin.set_high();
     }
 
     pub fn off(&mut self) {
-        self.pin.set_low().unwrap()
+        let _ = self.pin.set_low();
     }
 
     pub fn reset(&mut self) {
@@ -51,24 +52,20 @@ impl Led {
     pub fn cycle(&mut self) {
         if let Some(pattern) = self.ctx.pattern {
             if crate::time::global_tick() != 0 && crate::time::global_tick() - self.ctx.action_start < self.ctx.action_duration {
-                // println!("WAIT action");
                 return;
             }
 
             if self.ctx.index >= pattern.actions.len() {
-                // println!("END pattern i={} t={} a.s={} a.d={}", self.ctx.index, self.ctx.tick, self.ctx.action_start, self.ctx.action_duration);
                 self.reset();
                 return;
             }
 
             match pattern.actions[self.ctx.index] {
                 Action::On(ticks) => {
-                    // println!("action {} ON t={} a.s={} a.d={}", self.ctx.index, self.ctx.tick, self.ctx.action_start, self.ctx.action_duration);
                     self.on();
                     self.start_action(ticks);
                 }
                 Action::Off(ticks) => {
-                    // println!("action {} OFF t={} a.s={} a.d={}", self.ctx.index, self.ctx.tick, self.ctx.action_start, self.ctx.action_duration);
                     self.off();
                     self.start_action(ticks);
                 }
@@ -77,10 +74,6 @@ impl Led {
             self.ctx.index += 1;
         }
     }
-
-    // pub fn tick(&mut self) {
-    //     self.ctx.tick += 1;
-    // }
 }
 
-impl crate::object::Object for Led {}
+impl<E: 'static> crate::object::Object for Led<E> {}

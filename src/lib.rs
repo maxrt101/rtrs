@@ -7,6 +7,7 @@ pub mod task;
 pub mod time;
 pub mod tty;
 pub mod led;
+pub mod btn;
 pub mod shell;
 pub mod util;
 pub mod log;
@@ -16,5 +17,6 @@ pub use tty::ansi::*;
 pub use tty::ascii::*;
 pub use tty::{Tty, TtyEvent, TtyFlag};
 
+pub use btn::Button;
 pub use led::{action::Action, pattern::{Pattern, PatternExecutionContext}, Led};
 
