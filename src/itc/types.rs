@@ -1,5 +1,3 @@
-extern crate alloc;
-
 #[cfg(feature = "channel_dynamic")]
 pub type ChannelVec = alloc::vec::Vec<T>;
 

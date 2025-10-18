@@ -1,5 +1,3 @@
-extern crate alloc;
-
 use super::types::ChannelVec;
 
 pub type SubscriberId = usize;

@@ -1,5 +1,3 @@
-extern crate alloc;
-
 #[cfg(feature = "log_meta_dynamic")]
 pub type MetaStorage<K, V> = alloc::collections::BTreeMap<K, V>;
 

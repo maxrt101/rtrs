@@ -1,5 +1,4 @@
 extern crate alloc;
-
 use alloc::vec::Vec;
 
 use core::marker::PhantomData;

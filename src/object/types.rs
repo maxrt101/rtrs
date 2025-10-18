@@ -1,5 +1,3 @@
-extern crate alloc;
-
 #[cfg(feature = "storage_dynamic")]
 pub type ObjectStorage<K, V> = alloc::collections::BTreeMap<K, V>;
 
