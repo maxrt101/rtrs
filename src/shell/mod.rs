@@ -49,6 +49,10 @@ impl Shell {
         }
     }
 
+    pub fn run(&mut self, s: &str) {
+        self.rt.run(s);
+    }
+
     pub fn cycle(&mut self) {
         self.prompt();
 
@@ -56,7 +60,8 @@ impl Shell {
             match b {
                 crate::ASCII_KEY_CR | crate::ASCII_KEY_LF => { // ASCII Enter
                     println!();
-                    self.run();
+                    self.rt.run(self.input.as_str());
+                    self.input.clear();
                 }
                 crate::ASCII_KEY_BS | crate::ASCII_KEY_DEL => { // ASCII Backspace/Delete
                     self.input.pop();
@@ -80,12 +85,6 @@ impl Shell {
 
             self.input_changed.store(false, Ordering::SeqCst);
         }
-    }
-
-    fn run(&mut self) {
-        self.rt.run(self.input.as_str());
-
-        self.input.clear();
     }
 }
 

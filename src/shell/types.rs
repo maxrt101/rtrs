@@ -1,5 +1,3 @@
-extern crate alloc;
-
 #[cfg(feature = "shell_input_dynamic")]
 pub type Input = alloc::string::String;
 
