@@ -1,6 +1,6 @@
 extern crate alloc;
-
 use alloc::boxed::Box;
+
 use core::any::Any;
 
 use crate::object::{BoxObject, Object};

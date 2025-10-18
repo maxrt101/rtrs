@@ -49,7 +49,7 @@ impl Scheduler {
 
     pub fn schedule(&mut self) {
         self.sort(self.sort_cond_check());
-        
+
         let mut should_resort = false;
         let mut done = false;
         let mut all_blocked = true;
@@ -57,7 +57,7 @@ impl Scheduler {
         for i in 0..self.tasks.len() {
             if self.tasks[i].is_state(TaskState::Ready) {
                 all_blocked = false;
-                
+
                 unsafe { super::this::reset(); }
 
                 match self.tasks[i].poll() {
@@ -85,11 +85,11 @@ impl Scheduler {
         if done {
             self.tasks.retain(|t| !t.is_state(TaskState::Done));
         }
-        
+
         if should_resort {
             self.sort(true);
         }
-        
+
         if all_blocked {
             if let Some(idle) = &mut self.idle {
                 let _ = idle.poll();

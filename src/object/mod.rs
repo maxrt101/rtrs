@@ -3,12 +3,13 @@ mod storage;
 mod macros;
 
 extern crate alloc;
-
 use alloc::boxed::Box;
+
 use core::any::Any;
 
-pub use storage::Storage;
 use crate::sync::RwLock;
+
+pub use storage::Storage;
 
 pub trait Object: Any {}
 
