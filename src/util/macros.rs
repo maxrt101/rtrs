@@ -20,6 +20,13 @@ macro_rules! ok {
 }
 
 #[macro_export]
+macro_rules! ignore {
+    ($e:expr) => {
+        let _ = $e;
+    };
+}
+
+#[macro_export]
 macro_rules! timeit {
     ($code:block) => {{
         let start = rtrs::time::global_tick();
