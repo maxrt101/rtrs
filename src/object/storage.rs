@@ -1,10 +1,11 @@
+use crate::object::{BoxObject, Object};
+use crate::sync::{Ref, RefMut, RwLock};
+use crate::ignore;
+
 extern crate alloc;
 use alloc::boxed::Box;
 
 use core::any::Any;
-
-use crate::object::{BoxObject, Object};
-use crate::sync::{Ref, RefMut, RwLock};
 
 pub struct Storage {
     storage: super::types::ObjectStorage<&'static str, RwLock<BoxObject>>
@@ -60,7 +61,7 @@ impl Storage {
     }
 
     pub fn insert<T: Object + Send + Sync>(&mut self, key: &'static str, object: T) {
-        let _ = self.storage.insert(key, RwLock::new(Box::new(object)));
+        ignore!(self.storage.insert(key, RwLock::new(Box::new(object))));
     }
 
     pub fn remove(&mut self, key: &str) -> Option<BoxObject> {
