@@ -5,6 +5,14 @@ use crate::itc::channel::{Channel, SubscriberId};
 use crate::object::Object;
 use crate::time::Timeout;
 
+extern crate alloc;
+use alloc::boxed::Box;
+
+pub trait TtyBackend {
+    fn read(&mut self) -> Option<u8>;
+    fn write(&mut self, byte: u8);
+}
+
 pub enum TtyFlag {
     EchoOutput = 1 << 0,
 }
@@ -16,28 +24,30 @@ pub enum TtyEvent {
 }
 
 pub struct Tty {
-    read:   fn() -> Option<u8>,
-    write:  fn(u8),
-    flags:  u8,
-    // pubsub: Publisher<TtyEvent>,
-    event_channel: Channel<TtyEvent>,
+    backend: Box<dyn TtyBackend + Send + Sync + 'static>,
+    events:  Channel<TtyEvent>,
+    flags:   u8,
 }
 
 impl Tty {
-    pub fn new(write: fn(u8), read: fn() -> Option<u8>) -> Self {
-        Self { write, read, flags: 0, event_channel: Channel::<TtyEvent>::new() }
+    pub fn new<T: TtyBackend + Send + Sync + 'static>(backend: T) -> Self {
+        Self {
+            backend: Box::new(backend),
+            events: Channel::<TtyEvent>::new(),
+            flags: 0,
+        }
     }
 
     pub fn write(&mut self, byte: u8) {
-        self.event_channel.send(TtyEvent::WriteHappened);
-        (self.write)(byte);
+        self.events.send(TtyEvent::WriteHappened);
+        (*self.backend).write(byte);
     }
 
-    pub fn read(&self) -> Option<u8> {
-        (self.read)()
+    pub fn read(&mut self) -> Option<u8> {
+        (*self.backend).read()
     }
 
-    pub fn read_blocking(&self, timeout: Timeout) -> Option<u8> {
+    pub fn read_blocking(&mut self, timeout: Timeout) -> Option<u8> {
         while !timeout.expired() {
             let res = self.read();
 
@@ -50,15 +60,15 @@ impl Tty {
     }
 
     pub fn subscribe(&mut self) -> Option<SubscriberId> {
-        self.event_channel.subscribe()
+        self.events.subscribe()
     }
 
     pub fn unsubscribe(&mut self, id: SubscriberId) {
-        self.event_channel.unsubscribe(id)
+        self.events.unsubscribe(id)
     }
 
     pub fn recv_event(&mut self, id: SubscriberId) -> Option<TtyEvent> {
-        self.event_channel.recv(id)
+        self.events.recv(id)
     }
 
     pub fn set_flag(&mut self, flag: TtyFlag, value: bool) {
