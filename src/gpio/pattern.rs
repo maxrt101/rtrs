@@ -1,4 +1,5 @@
 use crate::time::TickProvider;
+use crate::ignore;
 
 extern crate alloc;
 use alloc::boxed::Box;
@@ -14,16 +15,7 @@ pub enum Command {
 pub enum Action {
     Command(Command),
     Repeat(Command, u32),
-    // Repeat(Action, u32),
 }
-
-/*
-Command(On(200)),
-Command(Off(320)),
-Repeat(Goto(0), 5)
-
-
-*/
 
 enum ActionResultAction {
     Idle,
@@ -81,28 +73,23 @@ impl PatternExecutionContext {
         self.pattern.is_some()
     }
 
-    fn process_action<E>(&mut self, action: &Action, pin: &mut super::Output<E>) -> ActionResultAction {
+    fn process_action(&mut self, action: &Action, pin: &mut super::Output) -> ActionResultAction {
         match action {
             Action::Command(Command::On(ticks)) => {
-                // println!("on {}", *ticks);
-                let _ = pin.set_high();
+                ignore!(pin.set_high());
                 self.start_action(*ticks);
             }
             Action::Command(Command::Off(ticks)) => {
-                // println!("off {}", *ticks);
-                let _ = pin.set_low();
+                ignore!(pin.set_low());
                 self.start_action(*ticks);
             }
             Action::Command(Command::Goto(idx)) => {
-                // println!("goto {}", *idx);
                 self.index = *idx as usize;
                 self.action_duration = 0;
                 return ActionResultAction::ProcessAgain;
             }
             Action::Repeat(nested_action, times) => {
-                // println!("repeat {}/{}", self.repeat_counter, *times);
                 if self.repeat_counter == *times {
-                    // self.index = current_idx;
                     self.repeat_counter = 0;
                     return ActionResultAction::Increment;
                 }
@@ -118,8 +105,7 @@ impl PatternExecutionContext {
         ActionResultAction::Increment
     }
 
-    fn process_current_action<E>(&mut self, pattern: &Pattern, pin: &mut super::Output<E>) {
-        // print!("{} ", self.index);
+    fn process_current_action(&mut self, pattern: &Pattern, pin: &mut super::Output) {
         match self.process_action(&pattern.actions[self.index], pin) {
             ActionResultAction::Idle => {}
             ActionResultAction::Increment => {
@@ -131,7 +117,7 @@ impl PatternExecutionContext {
         }
     }
 
-    pub fn cycle<E>(&mut self, pin: &mut super::Output<E>) {
+    pub fn cycle(&mut self, pin: &mut super::Output) {
         if let Some(pattern) = self.pattern {
             if self.tick.get_tick() != 0 && self.tick.get_tick() - self.action_start < self.action_duration {
                 return;
