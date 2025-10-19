@@ -9,8 +9,8 @@ heapless = "0.8.0"
 envint = "0.1.1"
 
 [features]
-#default = ["storage_dynamic", "log_meta_dynamic", "shell_input_dynamic", "shell_args_dynamic", "shell_env_dynamic", "channel_dynamic"]
-default = ["storage_fixed", "log_meta_fixed", "shell_input_fixed", "shell_args_fixed", "shell_env_fixed", "channel_fixed"]
+#default = ["storage_dynamic", "log_meta_dynamic", "shell_input_dynamic", "shell_args_dynamic", "shell_env_dynamic", "channel_dynamic", "sched_storage_dynamic"]
+default = ["storage_fixed", "log_meta_fixed", "shell_input_fixed", "shell_args_fixed", "shell_env_fixed", "channel_fixed", "sched_storage_fixed"]
 
 critical_section_custom = []
 track_locks = []
@@ -33,3 +33,6 @@ shell_env_fixed = []
 
 channel_dynamic = []
 channel_fixed = []
+
+sched_storage_dynamic = []
+sched_storage_fixed = []
