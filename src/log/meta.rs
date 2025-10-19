@@ -1,5 +1,5 @@
 use crate::log::{Severity, Level};
-
+use crate::ignore;
 
 #[derive(Copy, Clone)]
 pub struct ModuleMeta {
@@ -22,7 +22,7 @@ impl ModuleMetaManager {
     }
 
     pub fn register(&mut self, name: &'static str, severity: Severity, level: u8) {
-        let _ = self.meta.insert(name, ModuleMeta { severity, level });
+        ignore!(self.meta.insert(name, ModuleMeta { severity, level }));
     }
 
     pub fn get(&self, name: &str) -> Option<&ModuleMeta> {

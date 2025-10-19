@@ -1,4 +1,5 @@
 use super::types::ChannelVec;
+use crate::ignore;
 
 pub type SubscriberId = usize;
 type SubscriberBitmap = usize;
@@ -47,7 +48,7 @@ impl<T: Copy + Clone> Channel<T> {
 
     pub fn send(&mut self, data: T) {
         if self.subscribers != 0 {
-            let _ = self.queue.push(Message { data, received: 0 });
+            ignore!(self.queue.push(Message { data, received: 0 }));
         }
     }
 
