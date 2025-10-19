@@ -11,6 +11,7 @@ pub mod gpio;
 pub mod util;
 pub mod log;
 pub mod itc;
+pub mod bus;
 
 pub use tty::ansi::*;
 pub use tty::ascii::*;
