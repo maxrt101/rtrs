@@ -3,7 +3,7 @@
 macro_rules! tasks_run_with_ctx {
     ( $ctx:ident $(, $task:ident)+ ) => {
         while $ctx.should_run() && ($( $task.is_running() || )* false) {
-            $( let _ = $task.poll(); )*
+            $( $crate::ignore!($task.poll()); )*
         }
     };
 }
@@ -12,7 +12,7 @@ macro_rules! tasks_run_with_ctx {
 macro_rules! tasks_run {
     ( $($task:ident),+ ) => {
         while $( $task.is_running() || )* false {
-            $( let _ = $task.poll(); )*
+            $( $crate::ignore!($task.poll()); )*
         }
     };
 }

@@ -1,5 +1,5 @@
 use super::types::{EnvVar, EnvStorage};
-use crate::ok;
+use crate::{ignore, ok};
 
 use core::str::FromStr;
 
@@ -21,7 +21,7 @@ impl Environment {
                 *val = value;
             }
         } else {
-            let _ = self.env.insert(key, value);
+            ignore!(self.env.insert(key, value));
         }
 
         Ok(())

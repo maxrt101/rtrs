@@ -10,7 +10,7 @@ use core::sync::atomic::{AtomicBool, Ordering};
 use crate::tty::{Tty, TtyEvent};
 use crate::itc::channel::SubscriberId;
 use crate::log::console::CONSOLE_OBJECT_NAME;
-use crate::{print, println, object_with, object_with_mut};
+use crate::{print, println, object_with_mut, ignore};
 
 use command::Command;
 
@@ -56,7 +56,7 @@ impl Shell {
     pub fn cycle(&mut self) {
         self.prompt();
 
-        if let Some(b) = object_with!(CONSOLE_OBJECT_NAME, Tty, tty, tty.read()) {
+        if let Some(b) = object_with_mut!(CONSOLE_OBJECT_NAME, Tty, tty, tty.read()) {
             match b {
                 crate::ASCII_KEY_CR | crate::ASCII_KEY_LF => { // ASCII Enter
                     println!();
@@ -67,7 +67,7 @@ impl Shell {
                     self.input.pop();
                 }
                 _ => {
-                    let _ = self.input.push(b as char);
+                    ignore!(self.input.push(b as char));
                 }
             }
 

@@ -1,4 +1,5 @@
 use crate::shell::script::Runtime;
+use crate::ignore;
 use super::LOGGER;
 
 use core::fmt::Write;
@@ -56,7 +57,7 @@ pub fn cmd_set(rt: &mut Runtime, args: &[&str]) -> i8 {
         return 1;
     }
 
-    let _ = rt.env.set(args[0], args[1]);
+    ignore!(rt.env.set(args[0], args[1]));
 
     0
 }

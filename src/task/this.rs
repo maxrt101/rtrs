@@ -1,4 +1,6 @@
 use crate::sync::RwLock;
+use crate::ignore;
+
 use heapless::Deque;
 
 pub(crate) struct GlobalContext {
@@ -27,7 +29,7 @@ pub fn cancel() {
 pub fn spawn(task: super::Task<'static, ()>) {
     let mut global = GLOBAL.lock_mut();
 
-    let _ = (*global).new_tasks.push_back(task);
+    ignore!((*global).new_tasks.push_back(task));
 }
 
 pub unsafe fn reset() {

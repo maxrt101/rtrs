@@ -1,21 +1,20 @@
 use crate::task::{Task, TaskState};
 use crate::task::tcb::TaskFlags;
+use crate::ignore;
 
 extern crate alloc;
 
 use core::task::Poll;
 
-type SchedulerStorage<T> = alloc::vec::Vec<T>;
-
 pub struct Scheduler {
-    tasks: SchedulerStorage<Task<'static, ()>>,
+    tasks: super::types::SchedulerStorage<Task<'static>>,
     idle:  Option<Task<'static>>,
 }
 
 impl Scheduler {
     pub fn new() -> Self {
         Self {
-            tasks: SchedulerStorage::new(),
+            tasks: super::types::SchedulerStorage::new(),
             idle:  None,
         }
     }
@@ -43,7 +42,7 @@ impl Scheduler {
     }
 
     pub fn attach(&mut self, task: Task<'static, ()>) {
-        self.tasks.push(task);
+        ignore!(self.tasks.push(task));
         self.sort(true);
     }
 
@@ -74,7 +73,7 @@ impl Scheduler {
                 }
 
                 while let Some(task) = (*global).new_tasks.pop_back() {
-                    self.tasks.push(task);
+                    ignore!(self.tasks.push(task));
                     should_resort = true;
                 }
             }
@@ -92,7 +91,7 @@ impl Scheduler {
 
         if all_blocked {
             if let Some(idle) = &mut self.idle {
-                let _ = idle.poll();
+                ignore!(idle.poll());
             }
         }
     }

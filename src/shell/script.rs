@@ -1,10 +1,10 @@
 use super::types::{Arguments, EnvVar};
 use super::command::Command;
 use super::env::Environment;
+use crate::ignore;
 use super::LOGGER;
 
 use core::fmt::Write;
-
 /*
 TODO: Expand tokens & parsing
 TODO: Maybe add if/else
@@ -175,7 +175,7 @@ impl Runtime {
             while let Some(token) = tokens.next() {
                 match token {
                     Token::Word(word) => {
-                        let _ = args.push(word);
+                        ignore!(args.push(word));
                     }
                     Token::Variable(name) => {
                         let val = self.env.get(name).unwrap_or("");
@@ -184,7 +184,7 @@ impl Runtime {
                         //        handlers. Only danger this presents, is that if command handler
                         //        blindly writes to `env` and then reads `args`, which might
                         //        contain a variable from `env` - the args become invalid
-                        let _ = args.push(unsafe { &*(val as *const _) });
+                        ignore!(args.push(unsafe { &*(val as *const _) }));
                     }
                     Token::Semicolon => {
                         break;
@@ -202,8 +202,8 @@ impl Runtime {
 
             if let Some(res) = self.run_command(&args) {
                 let mut s = EnvVar::new();
-                let _ = write!(&mut s, "{}", res);
-                let _ = self.env.set("?", s.as_str());
+                ignore!(write!(&mut s, "{}", res));
+                ignore!(self.env.set("?", s.as_str()));
 
                 match condition {
                     Some(Token::And) => {

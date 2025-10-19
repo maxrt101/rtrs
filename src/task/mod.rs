@@ -6,6 +6,7 @@ pub mod tcb;
 pub mod ctx;
 mod waker;
 mod macros;
+mod types;
 
 pub use futures::{YieldFuture, TimeoutFuture};
 pub use tcb::{TaskState, TaskControlBlock};
