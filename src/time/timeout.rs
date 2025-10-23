@@ -1,7 +1,8 @@
 
+#[derive(Copy, Clone)]
 pub struct Timeout {
     duration: u32,
-    start: u32,
+    start:    u32,
 }
 
 impl Timeout {
