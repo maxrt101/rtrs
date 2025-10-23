@@ -27,6 +27,33 @@ macro_rules! ignore {
 }
 
 #[macro_export]
+macro_rules! map_range {
+    ($value:expr, $default:expr, $(($from:expr, $to:expr, $val:expr)),* ) => {
+        match $value {
+            $(_ if $value >= $from && $value <= $to => { $val })*
+            _ => $default,
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! cap {
+    ($value:expr, $low_bound:expr, $high_bound:expr) => {{
+        let value = $value;
+        let low_bound = $low_bound;
+        let high_bound = $high_bound;
+
+        if value < low_bound {
+            low_bound
+        } else if value > high_bound {
+            high_bound
+        } else {
+            value
+        }
+    }};
+}
+
+#[macro_export]
 macro_rules! timeit {
     ($code:block) => {{
         let start = rtrs::time::global_tick();
