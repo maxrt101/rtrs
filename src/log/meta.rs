@@ -9,15 +9,14 @@ pub struct ModuleMeta {
 
 pub struct ModuleMetaManager {
     meta: super::types::MetaStorage<&'static str, ModuleMeta>,
-    allow_unregistered: bool
+    allow_unregistered: bool,
 }
 
 impl ModuleMetaManager {
     pub const fn new() -> Self {
         Self {
-            // meta: BTreeMap::new(),
             meta: super::types::MetaStorage::new(),
-            allow_unregistered: false
+            allow_unregistered: false,
         }
     }
 
@@ -52,7 +51,7 @@ impl ModuleMetaManager {
     pub fn iter(&self) -> impl Iterator<Item=(&&'static str, &ModuleMeta)> {
         self.meta.iter()
     }
-    
+
     pub fn allow_unregistered(&self) -> bool {
         self.allow_unregistered
     }

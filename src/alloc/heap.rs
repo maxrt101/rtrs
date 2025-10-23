@@ -203,7 +203,8 @@ impl<const N: usize> HeapAllocator<N> {
         loop {
             let block = unsafe { &mut *blk };
 
-            println!("BLOCK {:?} used={} last={} data={:?} size={}", blk, block.used(), block.last(), block.data(), block.size());
+            println!("BLOCK {:?} used={} last={} data={:?} size={}",
+                     blk, block.used() as u8, block.last() as u8, block.data(), block.size());
 
             if block.last() {
                 return;

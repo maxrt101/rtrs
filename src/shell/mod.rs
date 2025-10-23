@@ -14,7 +14,7 @@ use crate::{print, println, object_with_mut, ignore};
 
 use command::Command;
 
-crate::logger!("SHELL");
+crate::logger!("shell");
 
 /*
 TODO: Handle arrow keys

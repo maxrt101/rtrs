@@ -2,9 +2,9 @@ use core::fmt::{Arguments, Write};
 use core::marker::PhantomData;
 use crate::log::{Level, Record, Severity};
 use crate::log::console::ConsoleWriter;
-use crate::object_with;
 use crate::util::traits::Empty;
 use crate::sync::RwLock;
+use crate::object_with;
 
 pub struct Logger<R: Record, W: Write + Empty = ConsoleWriter> {
     name: &'static str,

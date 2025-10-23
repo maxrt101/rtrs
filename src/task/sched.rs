@@ -70,6 +70,7 @@ impl Scheduler {
 
                 if (*global).should_cancel {
                     self.tasks[i].done();
+                    done = true;
                 }
 
                 while let Some(task) = (*global).new_tasks.pop_back() {
